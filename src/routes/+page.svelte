@@ -18,7 +18,7 @@
 	let posts: HashtagData[] = [];
 	let totalCount = 0;
 
-	function generateDummyPosts(tag: string): Post[] {
+	function generatePosts(tag: string): Post[] {
 		return Array.from({ length: 6 }, (_, i) => ({
 			id: `${tag}-${i}`,
 			content: `${tag} 관련 인스타그램 게시물 ${i + 1}`,
@@ -38,7 +38,7 @@
 		posts = hashtags.map((tag) => ({
 			hashtag: tag,
 			count: Math.floor(Math.random() * 10000),
-			posts: generateDummyPosts(tag)
+			posts: generatePosts(tag)
 		}));
 
 		totalCount = posts.reduce((sum, post) => sum + post.count, 0);
