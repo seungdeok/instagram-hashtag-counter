@@ -1,47 +1,39 @@
 <script lang="ts">
-	interface Post {
-		id: string;
-		content: string;
-		imageUrl: string;
-		likes: number;
-		comments: number;
-		link: string;
-	}
-
 	interface HashtagData {
 		hashtag: string;
 		count: number;
-		posts: Post[];
 	}
 
 	let hashtagInput = '';
-	let posts: HashtagData[] = [];
-	let totalCount = 0;
+	let hashtags: HashtagData[] = [];
 
-	function generatePosts(tag: string): Post[] {
-		return Array.from({ length: 6 }, (_, i) => ({
-			id: `${tag}-${i}`,
-			content: `${tag} 관련 인스타그램 게시물 ${i + 1}`,
-			imageUrl: `/api/placeholder/300/300`,
-			likes: Math.floor(Math.random() * 1000),
-			comments: Math.floor(Math.random() * 100),
-			link: `https://instagram.com/p/${Math.random().toString(36).substr(2, 11)}`
-		}));
-	}
-
-	function handleSubmit() {
+	async function handleSubmit() {
 		if (!hashtagInput) {
 			return alert('해시태그를 입력해주세요');
 		}
-		const hashtags = hashtagInput.split(',').map((tag) => tag.trim());
 
-		posts = hashtags.map((tag) => ({
-			hashtag: tag,
-			count: Math.floor(Math.random() * 10000),
-			posts: generatePosts(tag)
-		}));
+		try {
+			const hashtagsArray = hashtagInput.split(',').map((tag) => tag.trim());
 
-		totalCount = posts.reduce((sum, post) => sum + post.count, 0);
+			const response = await fetch('/api/instagram', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ hashtags: hashtagsArray })
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.message || '요청 처리 중 오류가 발생했습니다.');
+			}
+
+			const newHashtags: HashtagData[] = await response.json();
+			// 새로운 해시태그 결과를 기존 해시태그 배열에 추가합니다.
+			hashtags = [...hashtags, ...newHashtags];
+			hashtagInput = ''; // 입력 필드 초기화
+		} catch (error) {
+			console.error('Error:', error);
+			alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
+		}
 	}
 </script>
 
@@ -64,53 +56,19 @@
 		</form>
 	</div>
 
-	{#if totalCount > 0}
+	{#if hashtags.length > 0}
 		<div class="mb-6 rounded-lg bg-white p-6 shadow-md">
-			<div class="flex items-center gap-2">
-				<span class="text-lg font-semibold">
-					총 게시물 수: {totalCount.toLocaleString()}개
-				</span>
-			</div>
+			<h2 class="text-lg font-semibold">해시태그 결과</h2>
+			<ul class="mt-4">
+				{#each hashtags as { hashtag, count }}
+					<li class="flex justify-between border-b py-2">
+						<span>#{hashtag}</span>
+						<span>게시물 수: {count.toLocaleString()}개</span>
+					</li>
+				{/each}
+			</ul>
 		</div>
 	{/if}
-
-	{#each posts as post}
-		<div class="mb-6 rounded-lg bg-white shadow-md">
-			<div class="border-b p-6">
-				<h2 class="flex items-center gap-2 text-xl font-semibold">
-					#{post.hashtag}
-					<span class="text-sm font-normal text-gray-500">
-						({post.count.toLocaleString()}개)
-					</span>
-				</h2>
-			</div>
-			<div class="p-6">
-				<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{#each post.posts as item}
-						<div class="overflow-hidden rounded-lg bg-white shadow-md">
-							<a
-								href={item.link}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="block transition-opacity hover:opacity-90"
-							>
-								<div class="relative aspect-square bg-gray-100">
-									<img src={item.imageUrl} alt={item.content} class="h-full w-full object-cover" />
-								</div>
-								<div class="p-3">
-									<p class="line-clamp-2 text-sm">{item.content}</p>
-									<div class="mt-2 flex items-center justify-between text-sm text-gray-500">
-										<span>❤️ {item.likes}</span>
-										<span>💬 {item.comments}</span>
-									</div>
-								</div>
-							</a>
-						</div>
-					{/each}
-				</div>
-			</div>
-		</div>
-	{/each}
 </div>
 
 <style>

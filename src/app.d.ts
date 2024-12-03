@@ -7,6 +7,11 @@ declare global {
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
+		interface Env {
+			INSTAGRAM_USERNAME: string;
+			INSTAGRAM_PASSWORD: string;
+			INSTAGRAM_NAME: string;
+		}
 	}
 }
 
