@@ -2,7 +2,7 @@ import { INSTAGRAM_USERNAME, INSTAGRAM_PASSWORD, INSTAGRAM_NAME } from '$env/sta
 import { json } from '@sveltejs/kit';
 import puppeteer from 'puppeteer';
 
-const instagramCrawl = async () => {
+const instagramCrawl = async (hashtag: string) => {
 	const browser = await puppeteer.launch({
 		headless: true
 	});
@@ -39,7 +39,7 @@ const instagramCrawl = async () => {
 				break;
 			}
 		}
-		await page.type('input[aria-label="입력 검색"]', '#함안낙화놀이');
+		await page.type('input[aria-label="입력 검색"]', hashtag);
 		const text = await page.$eval('span', (el) => {
 			if (el.textContent?.startsWith('게시물')) {
 				return el.textContent;
@@ -51,7 +51,13 @@ const instagramCrawl = async () => {
 	}
 };
 
-export async function POST() {
-	const count = await instagramCrawl();
-	return json({ data: { count } });
+export async function POST(event) {
+	const body = await event.request.json();
+	const count = await instagramCrawl(body.hashtag);
+	return json({
+		data: {
+			hashtag: body.hashtag,
+			count
+		}
+	});
 }

@@ -11,14 +11,17 @@
 		if (!hashtagInput) {
 			return alert('해시태그를 입력해주세요');
 		}
+		if (!hashtagInput.includes('#')) {
+			return alert('해시태그에 #을 붙여주세요');
+		}
 
 		try {
-			const hashtagsArray = hashtagInput.split(',').map((tag) => tag.trim());
+			const hashtag = hashtagInput.trim();
 
 			const response = await fetch('/api/instagram', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ hashtags: hashtagsArray })
+				body: JSON.stringify({ hashtag })
 			});
 
 			if (!response.ok) {
@@ -26,10 +29,9 @@
 				throw new Error(error.message || '요청 처리 중 오류가 발생했습니다.');
 			}
 
-			const newHashtags: HashtagData[] = await response.json();
-			// 새로운 해시태그 결과를 기존 해시태그 배열에 추가합니다.
-			hashtags = [...hashtags, ...newHashtags];
-			hashtagInput = ''; // 입력 필드 초기화
+			const newHashtag: { data: HashtagData } = await response.json();
+			hashtags = [...hashtags, newHashtag.data];
+			hashtagInput = '';
 		} catch (error) {
 			console.error('Error:', error);
 			alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
@@ -44,7 +46,7 @@
 			<input
 				type="text"
 				bind:value={hashtagInput}
-				placeholder="해시태그를 쉼표(,)로 구분하여 입력하세요"
+				placeholder="해시태그를 입력하세요"
 				class="flex-1 rounded-md border p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
 			/>
 			<button
